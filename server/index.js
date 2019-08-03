@@ -5,8 +5,9 @@ import { Nuxt, Builder } from 'nuxt'
 import mongoose from 'mongoose'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-generic-session'
-import Redis from 'ioredis'
+const Redis = require('koa-redis')
 import json from 'koa-json'
+import cors from 'koa2-cors'
 import dbConfig from './dbs/config'
 import passport from './interface/utils/passport'
 import users from './interface/users'
@@ -29,6 +30,10 @@ mongoose.connect(dbConfig.dbs, {
 })
 app.use(passport.initialize())
 app.use(passport.session())
+app.use(cors({
+  credentials: true,    // 允许读取cookie
+  origin: 'http://127.0.0.1:3000'   // 此处填写前端跨域后被转译的地址
+}))
 
 async function start() {
   // Instantiate nuxt.js

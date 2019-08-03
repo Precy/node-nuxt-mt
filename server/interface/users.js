@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import Redis from 'ioredis'
+import Redis from 'koa-redis'
 import nodeMailer from 'nodemailer'
 import User from '../dbs/models/users'
 import Passport from './utils/passport'
@@ -8,14 +8,18 @@ import axios from './utils/axios'
 
 let router = new Router({prefix: '/users'})
 
-let Store = new Redis()
+let Store = new Redis().client
 
 router.post('/signup', async (ctx) => {
 	const {username, password, email, code} = ctx.request.body
-	
+	console.log(ctx.request.body)
 	if (code) {
-		const saveCode = await Store.hget(`nodemail: ${username}`, 'code')
+		const saveCode = await Store.hget(`nodemail:${username}`, 'code')
 		const saveExpire = await Store.hget(`nodemail:${username}`, 'expire')
+		// const saveCode = await Store.get(`nodemail:${username}code`)
+		// const saveExpire = await Store.get(`nodemail:${username}expire`)
+		console.log(code+'===================>code')
+		console.log(saveCode+'===================>saveCode')
 		if (code === saveCode) {
 			if (new Date().getTime() - saveExpire > 0) {
 				ctx.body = {
@@ -25,10 +29,12 @@ router.post('/signup', async (ctx) => {
 				return false
 			}
 		} else {
+			console.log('===================>请填写正确的验证码')
 			ctx.body = {
 				code: -1,
 				msg: '请填写正确的验证码'
 			}
+			return false
 		}
 	} else {
 		ctx.body = {
@@ -46,8 +52,12 @@ router.post('/signup', async (ctx) => {
 	}
 	let nuser = await User.create({username, password, email})
 	if (nuser) {
-		console.log(nuser)
+		console.log(nuser+'登录参数======================》')
+		// let res = await axios.post('/users/signin', {username, password})
 		let res = await axios.post('/users/signin', {username, password})
+		let res1 = await axios.get('/users/getUser')
+		console.log(res+'===============>成功')
+		console.log(res1.email+'===============>用户res1')
 		if (res.data && res.data.code === 0) {
 			ctx.body = {
 				code: 0,
@@ -63,34 +73,39 @@ router.post('/signup', async (ctx) => {
 	}
 })
 router.post('/signin', async (ctx, next) => {
-	return Passport.authenticate('local', function (err, user, info, status) {
-		if (err) {
-			ctx.body = {
-				code: -1,
-				msg: err
-			}
-		} else {
-			if (user) {
-				ctx.body = {
-					code: 0,
-					msg: '登录成功',
-					user
-				}
-				return ctx.login(user)
-			} else {
-				ctx.body = {
-					code:1,
-					msg: info
-				}
-			}
-		}
-	})(ctx, next)
+	console.log(ctx+'===============>登录函数')
+  return Passport.authenticate('local', function(err, user, info, status) {
+		console.log(ctx+'===============>登录函数body')
+    if (err) {
+      ctx.body = {
+        code: -1,
+        msg: err
+      }
+    } else {
+			console.log(JSON.stringify(user)+'================>登录user===========>>>>>>>>>>')
+      if (user) {
+        ctx.body = {
+          code: 0,
+          msg: '登录成功',
+          user
+        }
+        return ctx.login(user)
+      } else {
+        ctx.body = {
+          code: 1,
+          msg: info
+        }
+      }
+    }
+  })(ctx, next)
 })
 
 router.post('/verify', async (ctx, next) => {
 	let username = ctx.request.body.username
 	console.log(username)
-	const saveExpire = await Store.hget(`nodemail: ${username}`, 'expire')
+	const saveExpire = await Store.hget(`nodemail:${username}`, 'expire')
+	// const saveExpire = await Store.get(`nodemail:${username}expire`)
+	console.log(new Date().getTime())
 	if (saveExpire && new Date().getTime() - saveExpire < 0) {
 		ctx.body = {
 			code: -1,
@@ -119,10 +134,18 @@ router.post('/verify', async (ctx, next) => {
 	}
 	await transporter.sendMail(mailOptions, (error, info) => {
 		console.log(info)
-		if (err) {
+		if (error) {
 			return console.log(error)
 		} else {
-			Store.hset(`nodemail: ${ko.user}`, 'code', ko.code, 'expire', ko.expire, 'email', ko.email)
+			Store.hmset(`nodemail:${ko.user}`, 'code', ko.code, 'expire', ko.expire, 'email', ko.email)
+			// Store.hset(`nodemail:${ko.user}`, 'code', ko.code, 'expire', ko.expire, 'email', ko.email)
+			// Store.hset(`nodemail: ${ko.user}`, 'code', ko.code, 'expire', ko.expire, 'email', ko.email)
+			// Store.set(`nodemail:${ko.user}code`, ko.code)
+			// Store.set(`nodemail:${ko.user}expire`, ko.expire)
+			// Store.set(`nodemail:${ko.user}email`, ko.email)
+			// console.log(Store.get(`nodemail:${ko.user}code`))
+			// console.log(Store.get(`nodemail:${ko.user}expire`))
+			// console.log(Store.get(`nodemail:${ko.user}email`))
 		}
 	})
 	ctx.body = {
@@ -146,6 +169,7 @@ router.get('/exit', async (ctx, next) => {
 
 router.get('/getUser', async (ctx) => {
 	if (ctx.isAuthenticated()) {
+		console.log('已经登录')
 		const {username, email} = ctx.session.passport.user
 		ctx.body = {
 			user: username,

@@ -11,12 +11,15 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
+    "@nuxtjs/axios": "^5.5.4",
     "axios": "^0.19.0",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-preset-es2015": "^6.24.1",
     "co-redis": "^2.1.1",
+    "co-wrap-all": "git+https://github.com/connesc/co-wrap-all.git",
     "cross-env": "^5.2.0",
+    "crypto-js": "^3.1.9-1",
     "element-ui": "^2.4.11",
     "ioredis": "^4.11.2",
     "koa": "^2.6.2",
@@ -24,14 +27,19 @@
     "koa-generic-session": "^2.0.1",
     "koa-json": "^2.0.2",
     "koa-passport": "^4.1.3",
+    "koa-redis": "^4.0.0",
     "koa-router": "^7.4.0",
+    "koa2-cors": "^2.0.6",
     "mongoose": "^5.6.6",
     "nodemailer": "^6.3.0",
+    "npm": "^6.10.2",
     "nuxt": "^2.0.0",
     "passport-local": "^1.0.0",
     "redis": "^2.8.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.9"
+    "node-sass": "^4.12.0",
+    "nodemon": "^1.18.9",
+    "sass-loader": "^7.1.0"
   }
 }

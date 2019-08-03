@@ -34,11 +34,18 @@ import Logo from '~/components/Logo.vue'
 export default {
   components: {
     Logo
-  }
+  },
+  // async mounted(){
+  //   const {status,data:{user}} = await this.$axios.get('/users/getUser')
+  //   if(status===200){
+  //     console.log(data)
+  //     this.user=user
+  //   }
+  // }
 }
 </script>
 
-<style>
+<style lang="scss">
 .container {
   margin: 0 auto;
   min-height: 100vh;
