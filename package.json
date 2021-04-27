@@ -35,7 +35,7 @@
     "npm": "^6.10.2",
     "nuxt": "^2.0.0",
     "passport-local": "^1.0.0",
-    "redis": "^2.8.0"
+    "redis": "^3.1.1"
   },
   "devDependencies": {
     "node-sass": "^4.12.0",
